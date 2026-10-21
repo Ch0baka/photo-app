@@ -52,7 +52,12 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 860;
+    }
+    return true;
+  });
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [lightboxAsset, setLightboxAsset] = useState<ExifMetadata | null>(null);
@@ -237,6 +242,9 @@ export const App: React.FC = () => {
   }, [chapterDetail]);
 
   const selectChapterWithTransition = (slug: string) => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 860) {
+      setSidebarOpen(false);
+    }
     const docWithVT = document as Document & {
       startViewTransition?: (cb: () => void) => void;
     };
@@ -261,6 +269,9 @@ export const App: React.FC = () => {
       if (targetChapter) {
         setActiveChapterSlug(targetChapter.slug);
       }
+      if (typeof window !== 'undefined' && window.innerWidth <= 860) {
+        setSidebarOpen(false);
+      }
       setViewMode('reader');
     };
     if (typeof docWithVT.startViewTransition === 'function') {
@@ -281,6 +292,9 @@ export const App: React.FC = () => {
   };
 
   const handleReturnToBookshelf = () => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 860) {
+      setSidebarOpen(false);
+    }
     const docWithVT = document as Document & {
       startViewTransition?: (cb: () => void) => void;
     };
@@ -341,24 +355,43 @@ export const App: React.FC = () => {
   return (
     <div
       className={`app-shell ${
-        isBookshelf || !sidebarOpen ? 'sidebar-collapsed' : ''
+        isBookshelf || !sidebarOpen ? 'sidebar-collapsed' : 'sidebar-open'
       }`}
     >
+      {/* Mobile Sidebar Backdrop */}
+      {!isBookshelf && sidebarOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
       <aside className="sidebar" aria-label="Navegación de módulos y capítulos">
-        <div
-          className="sidebar-brand"
-          style={{ cursor: 'pointer' }}
-          onClick={handleReturnToBookshelf}
-          title="Volver a la biblioteca de libros"
-        >
-          <div className="alpha-emblem" aria-hidden="true">
-            α
+        <div className="sidebar-brand">
+          <div
+            className="sidebar-brand-main"
+            onClick={handleReturnToBookshelf}
+            title="Volver a la biblioteca de libros"
+          >
+            <div className="alpha-emblem" aria-hidden="true">
+              α
+            </div>
+            <div className="brand-titles">
+              <h1>Sony Alpha 7 IV</h1>
+              <span>Academia Fotográfica Local</span>
+            </div>
           </div>
-          <div className="brand-titles">
-            <h1>Sony Alpha 7 IV</h1>
-            <span>Academia Fotográfica Local</span>
-          </div>
+          <button
+            type="button"
+            className="sidebar-close-mobile"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Cerrar índice de capítulos"
+            title="Cerrar índice"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Module Selector */}
@@ -470,21 +503,22 @@ export const App: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  className="icon-btn"
+                  className="icon-btn back-library-btn"
                   onClick={handleReturnToBookshelf}
                   title="Volver a la biblioteca de libros"
                 >
-                  <span>← Biblioteca</span>
+                  <span>←</span>
+                  <span className="btn-label-text">Biblioteca</span>
                 </button>
                 <div className="breadcrumb">
-                  <span>{activeModule?.title}</span>
+                  <span className="breadcrumb-module">{activeModule?.title}</span>
                   {chapterDetail && (
                     <>
-                      <span> / </span>
+                      <span className="breadcrumb-sep"> / </span>
                       <strong>
                         {chapterDetail.chapterNumber === 0
                           ? 'Introducción'
-                          : `Capítulo ${chapterDetail.chapterNumber}`}
+                          : `Cap. ${chapterDetail.chapterNumber}`}
                       </strong>
                     </>
                   )}
@@ -498,22 +532,23 @@ export const App: React.FC = () => {
               href="https://helpguide.sony.net/ilc/2110/v1/es/index.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="icon-btn"
+              className="icon-btn manual-link-btn"
               title="Abrir Guía de Ayuda Oficial Sony Alpha 7 IV"
             >
               <span>📷</span>
-              <span>Manual α7 IV</span>
+              <span className="btn-label-text">Manual α7 IV</span>
             </a>
 
-            <div ref={settingsContainerRef} style={{ position: 'relative' }}>
+            <div ref={settingsContainerRef} className="settings-trigger-wrap">
               <button
                 type="button"
                 className={`icon-btn ${settingsOpen ? 'active' : ''}`}
                 onClick={() => setSettingsOpen((v) => !v)}
                 aria-expanded={settingsOpen}
+                title="Ajustes de apariencia y lectura"
               >
                 <span>Aa</span>
-                <span>Apariencia</span>
+                <span className="btn-label-text">Apariencia</span>
               </button>
 
               {settingsOpen && (

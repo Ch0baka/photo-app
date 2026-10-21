@@ -21,6 +21,8 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({ asset, onClose }) 
     origX: 0,
     origY: 0,
   });
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartScaleRef = useRef<number>(1);
   const stageRef = useRef<HTMLDivElement | null>(null);
 
   const clampScale = (next: number) =>
@@ -111,6 +113,50 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({ asset, onClose }) 
     setIsDragging(false);
   };
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchStartDistRef.current = Math.hypot(dx, dy);
+      pinchStartScaleRef.current = scale;
+      setIsDragging(false);
+    } else if (e.touches.length === 1 && scale > 1) {
+      setIsDragging(true);
+      dragStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        origX: offset.x,
+        origY: offset.y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && pinchStartDistRef.current !== null) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const ratio = dist / Math.max(1, pinchStartDistRef.current);
+      const next = clampScale(pinchStartScaleRef.current * ratio);
+      setScale(next);
+      if (next <= 1) {
+        setOffset({ x: 0, y: 0 });
+      }
+    } else if (e.touches.length === 1 && isDragging) {
+      const dx = e.touches[0].clientX - dragStartRef.current.x;
+      const dy = e.touches[0].clientY - dragStartRef.current.y;
+      setOffset({
+        x: dragStartRef.current.origX + dx,
+        y: dragStartRef.current.origY + dy,
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    pinchStartDistRef.current = null;
+    setIsDragging(false);
+  };
+
   const handleDoubleClick = () => {
     if (scale > 1) {
       updateZoom(1);
@@ -192,6 +238,9 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({ asset, onClose }) 
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           onDoubleClick={handleDoubleClick}
         >
           <img

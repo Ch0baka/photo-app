@@ -1,4 +1,4 @@
-# 📷 Photo-App — Aprende Fotografía con tu Propia Cámara
+# Photo-App — Aprende Fotografía con tu Propia Cámara
 
 > **Demo en vivo:** [https://ch0baka.github.io/photo-app/](https://ch0baka.github.io/photo-app/)
 
@@ -8,7 +8,7 @@
 
 ---
 
-## 🙌 Reconocimiento Especial y Créditos de Autor
+## 1. Reconocimiento Especial y Créditos de Autor
 
 Todo el corazón teórico, los esquemas ópticos y las fotografías de ejemplo que dan vida a los módulos de esta aplicación provienen de las extraordinarias guías formativas de **[PhotoPills](https://www.photopills.com/es)** (escritas por **Toni Cladera** y el equipo de PhotoPills):
 
@@ -19,13 +19,13 @@ Todo el mérito pedagógico, las imágenes y las explicaciones fotográficas per
 
 ---
 
-## 🎯 El verdadero propósito de este repositorio: ¡Hazlo tuyo con tu propia cámara!
+## 2. El verdadero propósito de este repositorio: ¡Hazlo tuyo con tu propia cámara!
 
 En la versión que ves publicada hoy, cada capítulo incluye **tarjetas prácticas y rutas de menú para la Sony Alpha 7 IV**, porque esa es la cámara con la que nació este entorno de estudio.
 
 Pero **la magia de este proyecto es que está pensado como una plantilla viva para que tú incorpores tu propia cámara** (ya sea una Canon EOS R50, Nikon Z50, Fujifilm X-T30, Sony a6400 o cualquier otra).
 
-### ¿Cómo adaptarlo a tu cámara en minutos usando IA?
+### Cómo adaptarlo a tu cámara en minutos usando IA
 
 No necesitas saber programar para personalizar esta plataforma con tu equipo fotográfico:
 
@@ -37,7 +37,7 @@ No necesitas saber programar para personalizar esta plataforma con tu equipo fot
 
 ---
 
-## 🤝 La tecnología ayuda, pero la fotografía se vive en equipo
+## 3. La tecnología ayuda, pero la fotografía se vive en equipo
 
 Por muy cómoda que sea esta aplicación y por mucho que nos apoyemos en inteligencia artificial para organizar el estudio, **ninguna pantalla reemplaza la experiencia de salir a hacer fotos con otras personas**.
 
@@ -47,7 +47,7 @@ Por muy cómoda que sea esta aplicación y por mucho que nos apoyemos en intelig
 
 ---
 
-## 📚 Más contenido en camino (o créalo tú mismo con `@STATE.md`)
+## 4. Más contenido en camino (o créalo tú mismo con `@STATE.md`)
 
 Este proyecto seguirá creciendo con nuevos módulos y libros técnicos en el futuro. 
 
@@ -57,7 +57,7 @@ Sin embargo, si no quieres esperar y tienes un nuevo libro o guía en PDF que qu
 
 ---
 
-## 🤓 Apartado para «los más técnicos» (Sí, miramos debajo del capó)
+## 5. Apartado para «los más técnicos» (Sí, miramos debajo del capó)
 
 Si eres de las personas que antes de leer el capítulo 1 del triángulo de exposición ya estaba abriendo el `package.json` para juzgar las dependencias... **bienvenido/a a tu rincón:**
 
@@ -86,4 +86,4 @@ npx tsc --noEmit && npm run lint && npm run build
 
 ---
 
-¡Que tengas buena luz, disfruta el proceso de aprender y nos vemos haciendo fotos! 📸✨
+¡Que tengas buena luz, disfruta el proceso de aprender y nos vemos haciendo fotos!

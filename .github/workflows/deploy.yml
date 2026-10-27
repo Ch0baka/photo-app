@@ -22,14 +22,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 24
+      - name: Setup Node.js 24 (Patched >= 24.22.1)
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '>=24.22.1'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install dependencies cleanly
+        run: npm ci
+
+      - name: Security audit check
+        run: npm audit --audit-level=high
 
       - name: Seed SQLite database
         run: npm run seed

@@ -57,6 +57,19 @@ function localSqliteApiPlugin(): Plugin {
           }
 
           res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.setHeader('X-Content-Type-Options', 'nosniff');
+
+          // Reject compressed request bodies (Defense-in-depth against CVE-2026-111497 / Node2Shell Brotli RCE)
+          const contentEncoding = (req.headers['content-encoding'] ?? '').toString().toLowerCase();
+          if (contentEncoding && contentEncoding !== 'identity') {
+            res.statusCode = 415;
+            res.end(
+              JSON.stringify({
+                error: 'Compressed request payloads (Content-Encoding) are not permitted.',
+              })
+            );
+            return;
+          }
 
           try {
             if (req.method === 'GET' && url === '/api/modules') {
@@ -83,14 +96,31 @@ function localSqliteApiPlugin(): Plugin {
             const completeMatch = url.match(/^\/api\/chapters\/([a-zA-Z0-9_-]+)\/complete$/);
             if (req.method === 'POST' && completeMatch) {
               const slug = completeMatch[1];
+              const MAX_BODY_BYTES = 1024;
               let body = '';
+              let bodyBytes = 0;
+              let aborted = false;
+
               req.on('data', (chunk: Buffer) => {
-                body += chunk.toString();
+                if (aborted) return;
+                bodyBytes += chunk.length;
+                if (bodyBytes > MAX_BODY_BYTES) {
+                  aborted = true;
+                  res.statusCode = 413;
+                  res.end(JSON.stringify({ error: 'Payload demasiado grande' }));
+                  req.destroy();
+                  return;
+                }
+                body += chunk.toString('utf-8');
               });
               req.on('end', () => {
+                if (aborted) return;
                 try {
-                  const parsed = JSON.parse(body || '{}') as { completed?: boolean };
-                  const updated = setChapterCompleted(slug, Boolean(parsed.completed), dbPath);
+                  const parsed = JSON.parse(body || '{}') as Record<string, unknown>;
+                  const completed =
+                    Object.prototype.hasOwnProperty.call(parsed, 'completed') &&
+                    parsed.completed === true;
+                  const updated = setChapterCompleted(slug, completed, dbPath);
                   if (!updated) {
                     res.statusCode = 404;
                     res.end(JSON.stringify({ error: 'Capítulo no encontrado' }));
@@ -123,6 +153,7 @@ export default defineConfig({
   base: './',
   plugins: [react(), localSqliteApiPlugin()],
   server: {
+    host: '127.0.0.1',
     port: 5173,
     strictPort: false,
   },

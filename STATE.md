@@ -38,17 +38,35 @@
 - [x] **16 Tarjetas Prácticas Sony Alpha 7 IV** dedicadas a profundidad de campo:
   - Mapa de Enfoque (*Focus Map* exclusivo de la α7 IV), *Focus Magnifier* + *Peaking*, Círculo de Confusión en el sensor de 33 MP ($0.029\text{ mm}$ estándar vs. $0.015\text{ mm}$ exigente), límite de difracción en $f/8 - f/11$, *Breathing Compensation*, teleconvertidores `SEL14TC`/`SEL20TC`, recorte Super 35mm (APS-C 15 MP), botón personalizado de Previsualización de Apertura (*Shot. Result Preview*) y comportamiento del bokeh con obturador electrónico de cortinilla delantera (*e-Front Curtain*).
 
-### E. Interfaz Web Moderna y Dashboard Estilo Apple Books (UI/UX)
+### E. Interfaz Web Moderna, Dashboard Estilo Apple Books y Responsividad Mobile (UI/UX)
 - [x] **Dashboard de Inicio Estilo Apple Books ([src/App.tsx](file:///Users/rolando/Gemini_projects/app_fotografia_bases/src/App.tsx) y [src/styles/app.css](file:///Users/rolando/Gemini_projects/app_fotografia_bases/src/styles/app.css)):**
   - Al iniciar, muestra una cuadrícula limpia centrada con las portadas de los libros, relieve de lomo tipo libro físico y pie minimalista con el porcentaje de progreso (`0%`..`100%`) a la izquierda y el icono `•••` a la derecha.
   - Al hacer clic en cualquier portada, abre directamente ese módulo en el lector (posicionándose en el primer capítulo pendiente de leer) con transición suave (`startViewTransition`).
   - Botón `← Biblioteca` en la barra superior del lector y clic en el emblema del sidebar para volver al dashboard de portadas en cualquier momento.
-- [x] **Personalización y Visor Avanzado:**
-  - 3 temas (`Oscuro`, `Claro`, `Sepia`), 6 familias tipográficas (`Inter`, `Plus Jakarta Sans`, `Lora`, `Merriweather`, `Literata`, `JetBrains Mono`), cierre automático del menú de apariencia al hacer clic fuera y visor [LightboxModal.tsx](file:///Users/rolando/Gemini_projects/app_fotografia_bases/src/components/LightboxModal.tsx) con zoom por botones y trackpad (`pinch-to-zoom`).
+- [x] **Adaptación Completa a Dispositivos Móviles:**
+  - Sidebar transformado en un *Drawer* táctil deslizable (`100dvh`) con cierre automático al elegir capítulo o tocar el fondo oscurecido (`sidebar-backdrop`).
+  - Menú de Apariencia (`Aa Apariencia`) responsivo para pantallas estrechas y visor [LightboxModal.tsx](file:///Users/rolando/Gemini_projects/app_fotografia_bases/src/components/LightboxModal.tsx) con soporte de gestos táctiles (*pinch-to-zoom* con 2 dedos y arrastre con 1 dedo).
 
 ---
 
-## 3. Estado Actual de la Base de Código
+## 3. Auditoría de Seguridad y Mitigación Familia «2Shell» (Octubre 2026)
+
+Se realizó la actualización integral del runtime local (**Node.js `v24.22.1`**), del pipeline de GitHub Actions ([.github/workflows/deploy.yml](file:///Users/rolando/Gemini_projects/app_fotografia_bases/.github/workflows/deploy.yml)), de las dependencias en [package.json](file:///Users/rolando/Gemini_projects/app_fotografia_bases/package.json) (`0 vulnerabilities` en `npm audit`) y del middleware local en [vite.config.ts](file:///Users/rolando/Gemini_projects/app_fotografia_bases/vite.config.ts).
+
+### Resumen Rápido de Impacto (Post-Actualización)
+
+| CVE / Aviso | Nombre / Componente | ¿Afecta a GitHub Pages (Producción)? | ¿Afecta a nuestro Código / App? | Estado del Runtime Local y CI (`Node v24.22.1`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **`CVE-2026-111497`** | **Node2Shell** — Desbordamiento en decodificador nativo **Brotli (`zlib`)** de Node.js | **No** (GitHub Pages sirve HTML/JS/JSON estático; no corre Node en producción). | **No** (el middleware en `vite.config.ts` no descomprime Brotli y ahora rechaza explícitamente `Content-Encoding` comprimido con HTTP `415`). | **Mitigado y Parcheado:** Runtime local y GitHub Actions actualizados a **Node `v24.22.1`**. |
+| **`CVE-2026-105482`** | Truncamiento por byte nulo (`\0`) en `node:dns` (`c-ares`) | **No** | **No** (no se utiliza `dns.resolve*()` ni `dns.reverse()`). | **Mitigado y Parcheado:** Runtime local y CI en **Node `v24.22.1`**. |
+| **`CVE-2026-105483`** y **`CVE-2026-106069`** | Bypass de validación de IP en `tls.checkServerIdentity()` (dígitos Unicode fullwidth / octales en macOS) | **No** | **No** (el servidor local no realiza conexiones TLS salientes hacia hosts dinámicos). | **Mitigado y Parcheado:** Runtime local y CI en **Node `v24.22.1`**. |
+| **`CVE-2026-109618`** y **`CVE-2026-109619`** | **PHP2Shell** — Corrupción OOM y estado global en el motor de **PHP** | **No** | **No** (exclusivo de PHP `8.2–8.5`; el proyecto es 100% TypeScript/React/Node). | **No aplica (Impacto Cero).** |
+| **`CVE-2025-55182`** | **React2Shell** — Deserialización insegura en React Server Components (RSC / Flight) | **No** | **No** (SPA estática sin RSC; además `react` y `react-dom` están fijados en **`^19.3.1`**). | **Parcheado (`react@19.3.1`).** |
+| **`GHSA-5gmw-xhrv-c9v3`** y **`GHSA-85c8-ppgw-ccpr`** | Prototipo contaminado a RCE en `tinypool` / `vitest` (dependencia de desarrollo) | **No** | **No** (solo devDependency de test). | **Parcheado:** Actualizado a `vitest@^5.0.5` (`npm audit` = **0 vulnerabilidades**). |
+
+---
+
+## 4. Estado Actual de la Base de Código
 
 | Componente / Archivo | Rol en el Proyecto | Estado |
 | :--- | :--- | :--- |
@@ -65,8 +83,9 @@
 
 ---
 
-## 4. Comandos de Operación Rápida
-- **Iniciar servidor de desarrollo:** `npm run dev` (abre en [http://localhost:5173/](http://localhost:5173/))
+## 5. Comandos de Operación Rápida
+- **Iniciar servidor de desarrollo:** `npm run dev` (abre en [http://127.0.0.1:5173/](http://127.0.0.1:5173/))
 - **Regenerar base de datos SQLite:** `npm run seed`
 - **Verificación de tipos TypeScript:** `npx tsc --noEmit`
 - **Linter de código:** `npm run lint`
+- **Auditoría de seguridad de paquetes:** `npm audit`

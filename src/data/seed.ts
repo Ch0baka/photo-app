@@ -31,6 +31,11 @@ import {
   BOOK_2_BLOCKS,
   BOOK_2_CHAPTERS,
 } from './book2-content.ts';
+import {
+  BOOK_3_ASSETS,
+  BOOK_3_BLOCKS,
+  BOOK_3_CHAPTERS,
+} from './book3-content.ts';
 
 const ROOT_DIR = process.cwd();
 const DATA_DIR = path.join(ROOT_DIR, 'data');
@@ -95,6 +100,19 @@ export function seedDatabase(): void {
     );
     const mod2Id = Number(mod2Result.lastInsertRowid);
 
+    const mod3Result = insertModule.run(
+      'libro-3-via-lactea-photopills',
+      'Módulo 3: La Guía Definitiva de Vía Láctea',
+      'Fotografía de Vía Láctea: la guía definitiva (2026)',
+      'Antoni Cladera — PhotoPills',
+      'Imagina, planifica y captura fotografías legendarias de la Vía Láctea con tu Sony Alpha 7 IV.',
+      '/images/covers/book-3-cover.png',
+      3,
+      13,
+      1
+    );
+    const mod3Id = Number(mod3Result.lastInsertRowid);
+
     const insertChapter = db.prepare(`
       INSERT INTO chapters (module_id, slug, chapter_number, title, subtitle, estimated_read_min, pdf_pages, is_ingested, is_completed)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -134,6 +152,23 @@ export function seedDatabase(): void {
       mod2ChapterIdByNum.set(ch.chapterNumber, Number(result.lastInsertRowid));
     }
 
+    const mod3ChapterIdByNum = new Map<number, number>();
+    for (const ch of BOOK_3_CHAPTERS) {
+      const isCompleted = completedSlugs.has(ch.slug) ? 1 : 0;
+      const result = insertChapter.run(
+        mod3Id,
+        ch.slug,
+        ch.chapterNumber,
+        ch.title,
+        ch.subtitle,
+        ch.estimatedReadMin,
+        ch.pdfPages,
+        ch.isIngested ? 1 : 0,
+        isCompleted
+      );
+      mod3ChapterIdByNum.set(ch.chapterNumber, Number(result.lastInsertRowid));
+    }
+
     const insertAsset = db.prepare(`
       INSERT INTO media_assets (id, chapter_id, file_path, alt_text, caption, camera_model, lens_focal, aperture, shutter_speed, iso, kelvin, extra_notes)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -167,6 +202,25 @@ export function seedDatabase(): void {
 
     for (const asset of BOOK_2_ASSETS) {
       const chId = mod2ChapterIdByNum.get(asset.chapterNumber);
+      if (!chId) continue;
+      insertAsset.run(
+        asset.id,
+        chId,
+        asset.filePath,
+        asset.altText,
+        asset.caption ?? null,
+        asset.cameraModel ?? null,
+        asset.lensFocal ?? null,
+        asset.aperture ?? null,
+        asset.shutterSpeed ?? null,
+        asset.iso ?? null,
+        asset.kelvin ?? null,
+        asset.extraNotes ?? null
+      );
+    }
+
+    for (const asset of BOOK_3_ASSETS) {
+      const chId = mod3ChapterIdByNum.get(asset.chapterNumber);
       if (!chId) continue;
       insertAsset.run(
         asset.id,
@@ -236,9 +290,17 @@ export function seedDatabase(): void {
       }
     }
 
+    // Seed Book 3 blocks
+    for (let chNum = 0; chNum <= 12; chNum++) {
+      const chBlocks = BOOK_3_BLOCKS[chNum];
+      if (chBlocks) {
+        insertBlocksForMap(mod3ChapterIdByNum, chNum, chBlocks);
+      }
+    }
+
     db.close();
     console.log(
-      `[SQLite Seed] Base de datos inicializada en ${DB_PATH}: Módulo 1 (28 caps, ${allBook1Assets.length} imgs) + Módulo 2 (16 caps, ${BOOK_2_ASSETS.length} imgs).`
+      `[SQLite Seed] Base de datos inicializada en ${DB_PATH}: Módulo 1 (28 caps, ${allBook1Assets.length} imgs) + Módulo 2 (16 caps, ${BOOK_2_ASSETS.length} imgs) + Módulo 3 (13 caps, ${BOOK_3_ASSETS.length} imgs).`
     );
   } catch (err) {
     console.error('[SQLite Seed Error]:', err);

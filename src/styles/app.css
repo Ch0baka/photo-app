@@ -1191,13 +1191,13 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 3.75rem;
-  max-width: 900px;
+  gap: 3rem;
+  max-width: 1080px;
   width: 100%;
 }
 
 .book-tile {
-  width: 260px;
+  width: 245px;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;

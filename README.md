@@ -14,6 +14,7 @@ Todo el corazón teórico, los esquemas ópticos y las fotografías de ejemplo q
 
 1. **Módulo 1:** *La guía definitiva para exponer correctamente tus fotos ¡Siempre!*
 2. **Módulo 2:** *La guía definitiva sobre la profundidad de campo*
+3. **Módulo 3:** *Fotografía de Vía Láctea: la guía definitiva (2026)*
 
 Todo el mérito pedagógico, las imágenes y las explicaciones fotográficas pertenecen a **PhotoPills**. Si aún no conoces su web, sus guías gratuitas o su aplicación móvil para planificar Sol, Luna y Vía Láctea, te recomendamos visitarlos y apoyar su trabajo en [photopills.com](https://www.photopills.com/es). Este repositorio tiene fines estrictamente educativos y de estudio personal.
 

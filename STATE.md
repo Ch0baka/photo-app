@@ -4,7 +4,8 @@
 - **Nombre:** Sony Alpha 7 IV — Plataforma de Aprendizaje Fotográfico
 - **Módulo 1:** *La guía definitiva para exponer correctamente tus fotos ¡Siempre!* (PhotoPills / Toni Cladera) — **100% completado e integrado** (Introducción + 27 capítulos, 465 páginas, 240 imágenes).
 - **Módulo 2:** *La guía definitiva sobre la profundidad de campo* (PhotoPills / Toni Cladera) — **100% completado e integrado** (Introducción + 15 capítulos, 141 páginas, 95 imágenes).
-- **Dashboard de Inicio (Estilo Apple Books):** Vista de biblioteca minimalista donde se muestran únicamente las portadas en alta resolución de los libros con efecto de lomo físico, el porcentaje de avance (`XX%`) abajo a la izquierda y el botón `•••` a la derecha.
+- **Módulo 3:** *Fotografía de Vía Láctea: la guía definitiva (2026)* (PhotoPills / Toni Cladera) — **100% completado e integrado** (Introducción + 12 capítulos, 132 páginas, 73 imágenes).
+- **Dashboard de Inicio (Estilo Apple Books):** Vista de biblioteca minimalista donde se muestran únicamente las portadas en alta resolución de los 3 libros con efecto de lomo físico, el porcentaje de avance (`XX%`) abajo a la izquierda y el botón `•••` a la derecha.
 - **Estado General:** Aplicación web local interactiva y funcional con arquitectura *Zero-Bloat* (React 19 + TypeScript + Vite + SQLite3 nativo con `node:sqlite`), con persistencia local y bucle de verificación en verde (`tsc`, `lint`, `seed`).
 
 ---
@@ -33,12 +34,18 @@
 
 ### D. Ingesta Total del Módulo 2 (*Profundidad de Campo*, 141 páginas / 16 Capítulos / 95 Imágenes)
 - [x] Extracción nativa de **95 activos gráficos** (fotografías y esquemas ópticos de profundidad de campo, círculo de confusión e hiperfocal) desde `photopills-dof-es.pdf` hacia `public/images/book-2/` (`intro` + `cap-1` a `cap-15`).
-- [x] Generación de portadas en alta resolución (`1224x1584`) desde la página 1 de cada PDF en `public/images/covers/book-1-cover.png` y `public/images/covers/book-2-cover.png`.
+- [x] Generación de portadas en alta resolución (`1224x1584`) desde la página 1 de cada PDF en `public/images/covers/book-1-cover.png`, `public/images/covers/book-2-cover.png` y `public/images/covers/book-3-cover.png`.
 - [x] Ingesta estructurada en [src/data/book2-content.ts](file:///Users/rolando/Gemini_projects/app_fotografia_bases/src/data/book2-content.ts) utilizando el parser por tamaño tipográfico real (`NSFont.pointSize`) para garantizar la continuidad perfecta de títulos multi-línea.
 - [x] **16 Tarjetas Prácticas Sony Alpha 7 IV** dedicadas a profundidad de campo:
   - Mapa de Enfoque (*Focus Map* exclusivo de la α7 IV), *Focus Magnifier* + *Peaking*, Círculo de Confusión en el sensor de 33 MP ($0.029\text{ mm}$ estándar vs. $0.015\text{ mm}$ exigente), límite de difracción en $f/8 - f/11$, *Breathing Compensation*, teleconvertidores `SEL14TC`/`SEL20TC`, recorte Super 35mm (APS-C 15 MP), botón personalizado de Previsualización de Apertura (*Shot. Result Preview*) y comportamiento del bokeh con obturador electrónico de cortinilla delantera (*e-Front Curtain*).
 
-### E. Interfaz Web Moderna, Dashboard Estilo Apple Books y Responsividad Mobile (UI/UX)
+### E. Ingesta Total del Módulo 3 (*Fotografía de Vía Láctea*, 132 páginas / 13 Capítulos / 73 Imágenes)
+- [x] Extracción nativa de **73 activos gráficos** (astrofotografías de paisaje, tablas del calendario galáctico 2026, mapas de contaminación lumínica y esquemas de planificación 2D/RA) desde `photopills-milky-es.pdf` hacia `public/images/book-3/` (`intro` + `cap-1` a `cap-12`).
+- [x] Ingesta estructurada en [src/data/book3-content.ts](file:///Users/rolando/Gemini_projects/app_fotografia_bases/src/data/book3-content.ts) (765 bloques de contenido + metadatos EXIF nocturnos).
+- [x] **13 Tarjetas Prácticas Sony Alpha 7 IV** dedicadas a astrofotografía de Vía Láctea:
+  - Encuadre nocturno en vivo con **Atención al brillo (*Bright Monitoring*)**, segundo escalón nativo **ISO 800 / 3200** del sensor Exmor R BSI de 33 MP, cálculo de la **Regla NPF** para el *pixel pitch* de $5.12\,\mu\text{m}$, enfoque manual a estrellas con *Focus Magnifier* (`5.9x` / `11.7x`), desactivación de `SteadyShot` y `RR Exp. Larga` en panorámicas y *stacking*, intervalómetro integrado y alimentación continua por USB-C Power Delivery.
+
+### F. Interfaz Web Moderna, Dashboard Estilo Apple Books y Responsividad Mobile (UI/UX)
 - [x] **Dashboard de Inicio Estilo Apple Books ([src/App.tsx](file:///Users/rolando/Gemini_projects/app_fotografia_bases/src/App.tsx) y [src/styles/app.css](file:///Users/rolando/Gemini_projects/app_fotografia_bases/src/styles/app.css)):**
   - Al iniciar, muestra una cuadrícula limpia centrada con las portadas de los libros, relieve de lomo tipo libro físico y pie minimalista con el porcentaje de progreso (`0%`..`100%`) a la izquierda y el icono `•••` a la derecha.
   - Al hacer clic en cualquier portada, abre directamente ese módulo en el lector (posicionándose en el primer capítulo pendiente de leer) con transición suave (`startViewTransition`).
@@ -75,11 +82,12 @@ Se realizó la actualización integral del runtime local (**Node.js `v24.22.1`**
 | `src/components/PhotoCard.tsx` | Componente de foto con píldoras EXIF y texto enriquecido | Producción V2 Estable |
 | `src/components/LightboxModal.tsx` | Visor modal con zoom por trackpad, botones de escala y arrastre | Producción V2 Estable |
 | `src/components/SettingsMenu.tsx` | Menú de preferencias (6 fuentes, modos de color, tamaño, espaciado) | Producción V2 Estable |
-| `src/data/book1-content.ts` (+3) | Contenido íntegro del Módulo 1 (Exposición, 28 caps, 240 imgs) | Producción V2 Estable |
-| `src/data/book2-content.ts` | Contenido íntegro del Módulo 2 (Profundidad de Campo, 16 caps, 95 imgs) | Producción V2 Estable |
-| `src/data/schema.sql` & `repository.ts` | Esquema relacional DDL y consultas con `node:sqlite` | Producción V2 Estable |
-| `src/data/seed.ts` | Ingesta masiva de ambos módulos y sus 335 activos gráficos | Producción V2 Estable |
-| `data/app.db` | Base de datos SQLite3 poblada con los 2 libros completos | Poblada y Verificada |
+| `src/data/book1-content.ts` (+3) | Contenido íntegro del Módulo 1 (Exposición, 28 caps, 240 imgs) | Producción V3 Estable |
+| `src/data/book2-content.ts` | Contenido íntegro del Módulo 2 (Profundidad de Campo, 16 caps, 95 imgs) | Producción V3 Estable |
+| `src/data/book3-content.ts` | Contenido íntegro del Módulo 3 (Vía Láctea, 13 caps, 73 imgs) | Producción V3 Estable |
+| `src/data/schema.sql` & `repository.ts` | Esquema relacional DDL y consultas con `node:sqlite` | Producción V3 Estable |
+| `src/data/seed.ts` | Ingesta masiva de los 3 módulos y sus 408 activos gráficos | Producción V3 Estable |
+| `data/app.db` | Base de datos SQLite3 poblada con los 3 libros completos (57 capítulos) | Poblada y Verificada |
 
 ---
 

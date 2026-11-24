@@ -48,6 +48,7 @@ export type BlockType =
   | 'image_pair'
   | 'callout_tip'
   | 'quote'
+  | 'table'
   | 'sony_a7iv_note';
 
 export interface HeadingBlockPayload {
@@ -103,6 +104,13 @@ export interface QuoteBlockPayload {
   source?: string;
 }
 
+export interface TableBlockPayload {
+  title?: string;
+  headers: string[];
+  rows: string[][];
+  footnote?: string;
+}
+
 export interface SonyA7IVNoteBlockPayload {
   title: string;
   summary: string;
@@ -121,6 +129,7 @@ export type BlockPayload =
   | ImagePairBlockPayload
   | CalloutTipBlockPayload
   | QuoteBlockPayload
+  | TableBlockPayload
   | SonyA7IVNoteBlockPayload;
 
 export interface ContentBlock {
@@ -138,17 +147,29 @@ export interface ChapterDetail extends ChapterSummary {
 }
 
 export type ThemeMode = 'dark' | 'light' | 'sepia';
+export type AccentColorOption =
+  | 'sony'
+  | 'blue'
+  | 'emerald'
+  | 'violet'
+  | 'rose'
+  | 'amber'
+  | 'cyan'
+  | 'slate';
 export type FontFamilyOption =
   | 'sans'
   | 'serif'
   | 'mono'
   | 'jakarta'
   | 'merriweather'
-  | 'literata';
+  | 'literata'
+  | 'macos'
+  | 'antigravity';
 export type FontSizeScale = 'sm' | 'md' | 'lg' | 'xl';
 
 export interface ReaderSettings {
   theme: ThemeMode;
+  accentColor: AccentColorOption;
   fontFamily: FontFamilyOption;
   fontSize: FontSizeScale;
   lineSpacing: 'compact' | 'normal' | 'relaxed';

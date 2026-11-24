@@ -2,6 +2,7 @@ import type { ExifMetadata, ReaderSettings } from './types.ts';
 
 export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   theme: 'dark',
+  accentColor: 'sony',
   fontFamily: 'sans',
   fontSize: 'md',
   lineSpacing: 'normal',
@@ -74,6 +75,20 @@ export function normalizeReaderSettings(input: unknown): ReaderSettings {
     record.theme === 'light' || record.theme === 'dark' || record.theme === 'sepia'
       ? record.theme
       : DEFAULT_READER_SETTINGS.theme;
+  const VALID_ACCENTS = new Set([
+    'sony',
+    'blue',
+    'emerald',
+    'violet',
+    'rose',
+    'amber',
+    'cyan',
+    'slate',
+  ]);
+  const accentColor =
+    typeof record.accentColor === 'string' && VALID_ACCENTS.has(record.accentColor)
+      ? (record.accentColor as ReaderSettings['accentColor'])
+      : DEFAULT_READER_SETTINGS.accentColor;
   const VALID_FONTS = new Set([
     'sans',
     'serif',
@@ -81,6 +96,8 @@ export function normalizeReaderSettings(input: unknown): ReaderSettings {
     'jakarta',
     'merriweather',
     'literata',
+    'macos',
+    'antigravity',
   ]);
   const fontFamily =
     typeof record.fontFamily === 'string' && VALID_FONTS.has(record.fontFamily)
@@ -106,6 +123,7 @@ export function normalizeReaderSettings(input: unknown): ReaderSettings {
 
   return {
     theme,
+    accentColor,
     fontFamily,
     fontSize,
     lineSpacing,

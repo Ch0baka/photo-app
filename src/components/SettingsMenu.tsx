@@ -1,14 +1,27 @@
 import React from 'react';
-import type { FontFamilyOption, ReaderSettings } from '../core/types.ts';
+import type { AccentColorOption, FontFamilyOption, ReaderSettings } from '../core/types.ts';
 
 interface SettingsMenuProps {
   settings: ReaderSettings;
   onChange: (updated: ReaderSettings) => void;
 }
 
+const ACCENT_OPTIONS: Array<{ id: AccentColorOption; label: string; swatch: string }> = [
+  { id: 'sony', label: 'Sony Alpha', swatch: '#ea580c' },
+  { id: 'blue', label: 'Azul Técnico', swatch: '#3b82f6' },
+  { id: 'emerald', label: 'Esmeralda', swatch: '#10b981' },
+  { id: 'violet', label: 'Violeta', swatch: '#8b5cf6' },
+  { id: 'rose', label: 'Carmesí', swatch: '#f43f5e' },
+  { id: 'amber', label: 'Ámbar Dorado', swatch: '#f59e0b' },
+  { id: 'cyan', label: 'Cian Óptico', swatch: '#06b6d4' },
+  { id: 'slate', label: 'Grafito', swatch: '#64748b' },
+];
+
 const FONT_OPTIONS: Array<{ id: FontFamilyOption; label: string; sample: string }> = [
   { id: 'sans', label: 'Inter', sample: 'Sans Moderna' },
   { id: 'jakarta', label: 'Plus Jakarta', sample: 'Sans Geométrica' },
+  { id: 'macos', label: 'SF Pro (macOS)', sample: 'Sistema Apple' },
+  { id: 'antigravity', label: 'Antigravity', sample: 'Google / DM Sans' },
   { id: 'serif', label: 'Lora', sample: 'Serif Editorial' },
   { id: 'merriweather', label: 'Merriweather', sample: 'Serif Clásica' },
   { id: 'literata', label: 'Literata', sample: 'Lectura Digital' },
@@ -46,7 +59,28 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ settings, onChange }
       </div>
 
       <div className="settings-group">
-        <span className="settings-label">Familia tipográfica (6 estilos)</span>
+        <span className="settings-label">Esquema de color (8 acentos)</span>
+        <div className="accent-grid-control" role="radiogroup" aria-label="Color de acento">
+          {ACCENT_OPTIONS.map((accent) => (
+            <button
+              key={accent.id}
+              type="button"
+              role="radio"
+              aria-checked={settings.accentColor === accent.id}
+              aria-label={accent.label}
+              title={accent.label}
+              className={`accent-swatch-btn ${settings.accentColor === accent.id ? 'active' : ''}`}
+              style={{ '--swatch-color': accent.swatch } as React.CSSProperties}
+              onClick={() => onChange({ ...settings, accentColor: accent.id })}
+            >
+              <span className="accent-swatch-dot" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="settings-group">
+        <span className="settings-label">Familia tipográfica (8 estilos)</span>
         <div className="font-grid-control">
           {FONT_OPTIONS.map((font) => (
             <button

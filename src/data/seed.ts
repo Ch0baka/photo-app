@@ -36,6 +36,7 @@ import {
   BOOK_3_BLOCKS,
   BOOK_3_CHAPTERS,
 } from './book3-content.ts';
+import { loadReportsModule } from './reports-content.ts';
 
 const ROOT_DIR = process.cwd();
 const DATA_DIR = path.join(ROOT_DIR, 'data');
@@ -298,9 +299,175 @@ export function seedDatabase(): void {
       }
     }
 
+    // Seed Public "Reportes" Module (synchronized with GitHub; 1 chapter per .md file in src/data/reports/)
+    const reportsData = loadReportsModule();
+    let reportsSummary = '';
+    if (reportsData.chapters.length > 0) {
+      const modReportsResult = insertModule.run(
+        'reportes-investigaciones',
+        'Módulo Reportes: Investigaciones Fotográficas',
+        'Compendio de estudios técnicos, comparativas de hardware y notas técnicas públicas',
+        'Archivo de Investigación Fotográfica',
+        'Colección incremental de reportes técnicos, comparativas imparciales de equipamiento y estudios aplicados. Cada nuevo documento en src/data/reports/ se incorpora automáticamente como un capítulo.',
+        '/images/covers/reportes-cover.png',
+        5,
+        reportsData.chapters.length,
+        1
+      );
+      const modReportsId = Number(modReportsResult.lastInsertRowid);
+      const modReportsChapterIdByNum = new Map<number, number>();
+
+      for (const ch of reportsData.chapters) {
+        const isCompleted = completedSlugs.has(ch.slug) ? 1 : 0;
+        const result = insertChapter.run(
+          modReportsId,
+          ch.slug,
+          ch.chapterNumber,
+          ch.title,
+          ch.subtitle,
+          ch.estimatedReadMin,
+          ch.pdfPages,
+          ch.isIngested ? 1 : 0,
+          isCompleted
+        );
+        modReportsChapterIdByNum.set(ch.chapterNumber, Number(result.lastInsertRowid));
+      }
+
+      for (const asset of reportsData.assets) {
+        const chId = modReportsChapterIdByNum.get(asset.chapterNumber);
+        if (!chId) continue;
+        insertAsset.run(
+          asset.id,
+          chId,
+          asset.filePath,
+          asset.altText,
+          asset.caption ?? null,
+          asset.cameraModel ?? null,
+          asset.lensFocal ?? null,
+          asset.aperture ?? null,
+          asset.shutterSpeed ?? null,
+          asset.iso ?? null,
+          asset.kelvin ?? null,
+          asset.extraNotes ?? null
+        );
+      }
+
+      for (const ch of reportsData.chapters) {
+        const chBlocks = reportsData.blocksByChapter[ch.chapterNumber];
+        if (chBlocks) {
+          insertBlocksForMap(modReportsChapterIdByNum, ch.chapterNumber, chBlocks);
+        }
+      }
+
+      reportsSummary = ` + Reportes (${reportsData.chapters.length} caps, ${reportsData.assets.length} imgs)`;
+    }
+
+    // Seed Private Local Module 4 (Mark Galer) ONLY if local private JSON exists (never synced to GitHub)
+    const privateBook4Path = path.join(DATA_DIR, 'private', 'book4.json');
+    let mod4Summary = '';
+    if (fs.existsSync(privateBook4Path)) {
+      interface PrivateBook4Payload {
+        module: {
+          slug: string;
+          title: string;
+          subtitle: string;
+          author: string;
+          description: string;
+          coverImage: string;
+          orderIndex: number;
+          totalChapters: number;
+        };
+        chapters: Array<{
+          slug: string;
+          chapterNumber: number;
+          title: string;
+          subtitle: string;
+          estimatedReadMin: number;
+          pdfPages: string;
+          isIngested: boolean;
+        }>;
+        assets: Array<{
+          id: string;
+          chapterNumber: number;
+          filePath: string;
+          altText: string;
+          caption?: string;
+          cameraModel?: string;
+          lensFocal?: string;
+          aperture?: string;
+          shutterSpeed?: string;
+          iso?: string;
+          kelvin?: string;
+          extraNotes?: string;
+        }>;
+        blocksByChapter: Record<string, SeedBlockInput[]>;
+      }
+
+      const rawPrivate = fs.readFileSync(privateBook4Path, 'utf-8');
+      const book4 = JSON.parse(rawPrivate) as PrivateBook4Payload;
+
+      const mod4Result = insertModule.run(
+        book4.module.slug,
+        book4.module.title,
+        book4.module.subtitle,
+        book4.module.author,
+        book4.module.description,
+        book4.module.coverImage,
+        book4.module.orderIndex,
+        book4.module.totalChapters,
+        1
+      );
+      const mod4Id = Number(mod4Result.lastInsertRowid);
+
+      const mod4ChapterIdByNum = new Map<number, number>();
+      for (const ch of book4.chapters) {
+        const isCompleted = completedSlugs.has(ch.slug) ? 1 : 0;
+        const result = insertChapter.run(
+          mod4Id,
+          ch.slug,
+          ch.chapterNumber,
+          ch.title,
+          ch.subtitle,
+          ch.estimatedReadMin,
+          ch.pdfPages,
+          ch.isIngested ? 1 : 0,
+          isCompleted
+        );
+        mod4ChapterIdByNum.set(ch.chapterNumber, Number(result.lastInsertRowid));
+      }
+
+      for (const asset of book4.assets) {
+        const chId = mod4ChapterIdByNum.get(asset.chapterNumber);
+        if (!chId) continue;
+        insertAsset.run(
+          asset.id,
+          chId,
+          asset.filePath,
+          asset.altText,
+          asset.caption ?? null,
+          asset.cameraModel ?? null,
+          asset.lensFocal ?? null,
+          asset.aperture ?? null,
+          asset.shutterSpeed ?? null,
+          asset.iso ?? null,
+          asset.kelvin ?? null,
+          asset.extraNotes ?? null
+        );
+      }
+
+      for (const ch of book4.chapters) {
+        const chBlocks = book4.blocksByChapter[String(ch.chapterNumber)];
+        if (chBlocks) {
+          insertBlocksForMap(mod4ChapterIdByNum, ch.chapterNumber, chBlocks);
+        }
+      }
+
+      mod4Summary = ` + Módulo 4 Privado (${book4.chapters.length} caps, ${book4.assets.length} imgs)`;
+    }
+
     db.close();
     console.log(
-      `[SQLite Seed] Base de datos inicializada en ${DB_PATH}: Módulo 1 (28 caps, ${allBook1Assets.length} imgs) + Módulo 2 (16 caps, ${BOOK_2_ASSETS.length} imgs) + Módulo 3 (13 caps, ${BOOK_3_ASSETS.length} imgs).`
+      `[SQLite Seed] Base de datos inicializada en ${DB_PATH}: Módulo 1 (28 caps, ${allBook1Assets.length} imgs) + Módulo 2 (16 caps, ${BOOK_2_ASSETS.length} imgs) + Módulo 3 (13 caps, ${BOOK_3_ASSETS.length} imgs)${reportsSummary}${mod4Summary}.`
     );
   } catch (err) {
     console.error('[SQLite Seed Error]:', err);

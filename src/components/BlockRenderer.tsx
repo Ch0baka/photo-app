@@ -11,6 +11,7 @@ import type {
   QaItemBlockPayload,
   QuoteBlockPayload,
   SonyA7IVNoteBlockPayload,
+  TableBlockPayload,
 } from '../core/types.ts';
 import { PhotoCard, RichText } from './PhotoCard.tsx';
 
@@ -150,6 +151,38 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
             ))}
           </ul>
         </aside>
+      );
+    }
+
+    case 'table': {
+      const payload = block.payload as TableBlockPayload;
+      return (
+        <figure className="table-block-wrapper">
+          {payload.title && <figcaption className="table-block-title">{payload.title}</figcaption>}
+          <div className="table-scroll">
+            <table className="content-table">
+              <thead>
+                <tr>
+                  {payload.headers.map((header, idx) => (
+                    <th key={idx} scope="col">
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {payload.rows.map((row, rIdx) => (
+                  <tr key={rIdx}>
+                    {row.map((cell, cIdx) => (
+                      <td key={cIdx}>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {payload.footnote && <p className="table-block-footnote">{payload.footnote}</p>}
+        </figure>
       );
     }
 

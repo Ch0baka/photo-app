@@ -68,8 +68,24 @@ Si eres de las personas que antes de leer el capítulo 1 del triángulo de expos
   - Cuando corres `npm run dev` en tu máquina, Vite levanta un middleware REST conectado en vivo a `./data/app.db` (SQLite3).
   - Cuando haces `npm run build`, el plugin exporta automáticamente un espejo JSON estático desde SQLite hacia `dist/static-api/` y el frontend conmuta de forma transparente a modo estático + `localStorage`. Así GitHub Pages sirve todo a velocidad de cohete sin necesitar un backend Node corriendo 24/7.
 - **Visor con zoom de verdad:** El Lightbox tiene listeners no pasivos para que el *pinch-to-zoom* del trackpad amplíe solo la fotografía y sus metadatos EXIF, sin deformar toda la interfaz del navegador como si estuviéramos en 2009.
+- **Menú Apariencia (`Aa Apariencia`) personalizable:** Permite alternar entre 3 modos base (*Oscuro*, *Claro*, *Sepia*), **8 colores de acento** (conservando el naranja *Sony Alpha* por defecto), **8 familias tipográficas** (incluyendo *SF Pro* nativa de macOS y *Antigravity / DM Sans*), 4 tamaños y 3 interlineados.
 
 ### Comandos rápidos para levantar el laboratorio local
+
+La forma más sencilla de iniciar y detener la aplicación en segundo plano es usando los scripts CLI incluidos en la raíz del proyecto:
+
+```bash
+# Iniciar el servidor local en segundo plano (instala dependencias si faltan, ejecuta seed y levanta Vite en http://127.0.0.1:5173/)
+./start.sh
+
+# Detener el servidor local de forma limpia (cierra procesos y libera el puerto 5173)
+./stop.sh
+
+# Ver logs en tiempo real mientras está activo
+tail -f .app.log
+```
+
+Si prefieres ejecutar los pasos manualmente en primer plano:
 
 ```bash
 # 1. Instalar dependencias (rápido e indoloro)

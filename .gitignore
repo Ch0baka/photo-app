@@ -7,3 +7,12 @@ data/*.db-shm
 data/*.db-wal
 *.pdf
 public/static-api/
+.app.pid
+.app.log
+
+# Contenido de pago estrictamente local (Módulo 4 - Mark Galer)
+data/app.db
+data/private/
+src/data/private-*
+public/images/book-4/
+public/images/covers/book-4-cover.*

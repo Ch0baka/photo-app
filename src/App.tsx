@@ -18,6 +18,8 @@ import { SettingsMenu } from './components/SettingsMenu.tsx';
 
 const SETTINGS_STORAGE_KEY = 'sony_a7iv_reader_settings_v1';
 const COMPLETED_STORAGE_KEY = 'sony_a7iv_completed_slugs_v1';
+const MODULES_EXPANDED_STORAGE_KEY = 'sony_a7iv_modules_expanded_v1';
+const CHAPTER_TOC_EXPANDED_STORAGE_KEY = 'sony_a7iv_chapter_toc_expanded_v1';
 
 function getCompletedOverrides(): Record<string, boolean> {
   try {
@@ -59,7 +61,47 @@ export const App: React.FC = () => {
     return true;
   });
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+  const [modulesExpanded, setModulesExpanded] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(MODULES_EXPANDED_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [chapterTocExpanded, setChapterTocExpanded] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(CHAPTER_TOC_EXPANDED_STORAGE_KEY) !== 'false';
+    } catch {
+      return true;
+    }
+  });
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const updateModulesExpanded = (nextExpanded: boolean) => {
+    setModulesExpanded(nextExpanded);
+    try {
+      localStorage.setItem(MODULES_EXPANDED_STORAGE_KEY, String(nextExpanded));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const updateChapterTocExpanded = (nextExpanded: boolean) => {
+    setChapterTocExpanded(nextExpanded);
+    try {
+      localStorage.setItem(CHAPTER_TOC_EXPANDED_STORAGE_KEY, String(nextExpanded));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const handleJumpToSection = (anchor: string) => {
+    const el = document.getElementById(anchor);
+    el?.scrollIntoView({ behavior: 'smooth' });
+    if (typeof window !== 'undefined' && window.innerWidth <= 860) {
+      setSidebarOpen(false);
+    }
+  };
   const [lightboxAsset, setLightboxAsset] = useState<ExifMetadata | null>(null);
   const settingsContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -107,6 +149,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute('data-theme', settings.theme);
+    root.setAttribute('data-accent', settings.accentColor);
     root.setAttribute('data-font', settings.fontFamily);
     root.setAttribute('data-size', settings.fontSize);
     root.setAttribute('data-spacing', settings.lineSpacing);
@@ -283,8 +326,13 @@ export const App: React.FC = () => {
 
   const handleSelectModuleInSidebar = (mod: ModuleItem) => {
     if (!mod.isAvailable) return;
+    if (mod.id === activeModuleId) {
+      updateModulesExpanded(!modulesExpanded);
+      return;
+    }
     setActiveModuleId(mod.id);
-    if (mod.id !== activeModuleId && mod.chapters.length > 0) {
+    updateModulesExpanded(false);
+    if (mod.chapters.length > 0) {
       const firstUncompleted = mod.chapters.find((c) => !c.isCompleted);
       const targetChapter = firstUncompleted ?? mod.chapters[0];
       selectChapterWithTransition(targetChapter.slug);
@@ -394,22 +442,41 @@ export const App: React.FC = () => {
           </button>
         </div>
 
-        {/* Module Selector */}
-        <div className="module-switcher">
-          {modules.map((mod) => (
-            <button
-              key={mod.id}
-              type="button"
-              disabled={!mod.isAvailable}
-              className={`module-pill ${mod.id === activeModuleId ? 'active' : ''}`}
-              onClick={() => handleSelectModuleInSidebar(mod)}
-            >
-              <span>{mod.title}</span>
-              <span className="module-badge">
-                {mod.isAvailable ? `${mod.chapters.length} caps` : 'Pronto'}
-              </span>
-            </button>
-          ))}
+        {/* Smart Collapsible Module Switcher (single list, active module always visible) */}
+        <div
+          className={`module-switcher ${modulesExpanded ? 'is-expanded' : ''}`}
+          role="region"
+          aria-label="Selector de módulos"
+        >
+          {modules.map((mod) => {
+            const isActive = mod.id === activeModuleId;
+            const isCollapsedInactive = !isActive && !modulesExpanded;
+            return (
+              <button
+                key={mod.id}
+                type="button"
+                disabled={!mod.isAvailable}
+                aria-expanded={isActive ? modulesExpanded : undefined}
+                aria-hidden={isCollapsedInactive ? true : undefined}
+                tabIndex={isCollapsedInactive ? -1 : undefined}
+                aria-label={
+                  isActive
+                    ? modulesExpanded
+                      ? `${mod.title}. Pulsa para plegar la lista de módulos`
+                      : `${mod.title}. Pulsa para cambiar de módulo`
+                    : mod.title
+                }
+                className={`module-pill ${isActive ? 'active' : ''}`}
+                onClick={() => handleSelectModuleInSidebar(mod)}
+              >
+                {isActive && <span className="module-pill-chevron" aria-hidden="true" />}
+                <span className="module-pill-title">{mod.title}</span>
+                <span className="module-badge">
+                  {mod.isAvailable ? `${mod.chapters.length} caps` : 'Pronto'}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Search Filter */}
@@ -436,38 +503,79 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Chapter List */}
+        {/* Chapter List with Nested Collapsible Chapter Sub-Indices */}
         <nav className="chapter-list" aria-label="Índice de capítulos">
           {filteredChapters.map((ch) => {
             const isActive = ch.slug === activeChapterSlug;
+            const showSubToc =
+              isActive &&
+              chapterDetail?.slug === ch.slug &&
+              tocHeadings.length > 0;
             return (
-              <button
-                key={ch.id}
-                type="button"
-                className={`chapter-item ${isActive ? 'active' : ''} ${
-                  ch.isCompleted ? 'completed' : ''
-                } ${ch.isIngested ? '' : 'pending-ingest'}`}
-                onClick={() => selectChapterWithTransition(ch.slug)}
-              >
-                <span className="chapter-num">
-                  {ch.chapterNumber === 0 ? 'IN' : ch.chapterNumber}
-                </span>
-                <span className="chapter-info">
-                  <span className="chapter-title">{ch.title}</span>
-                  <span className="chapter-meta">
-                    {ch.isIngested ? (
-                      <>
-                        <span className="status-dot" title="Contenido disponible" />
-                        <span>{ch.estimatedReadMin} min</span>
-                        <span>· págs. {ch.pdfPages}</span>
-                      </>
-                    ) : (
-                      <span>Pendiente de volcar · págs. {ch.pdfPages}</span>
-                    )}
-                    {ch.isCompleted && <span>· ✓ Leído</span>}
+              <div key={ch.id} className={`chapter-item-group ${isActive ? 'is-active' : ''}`}>
+                <button
+                  type="button"
+                  className={`chapter-item ${isActive ? 'active' : ''} ${
+                    ch.isCompleted ? 'completed' : ''
+                  } ${ch.isIngested ? '' : 'pending-ingest'}`}
+                  onClick={() => selectChapterWithTransition(ch.slug)}
+                >
+                  <span className="chapter-num">
+                    {ch.chapterNumber === 0 ? 'IN' : ch.chapterNumber}
                   </span>
-                </span>
-              </button>
+                  <span className="chapter-info">
+                    <span className="chapter-title">{ch.title}</span>
+                    <span className="chapter-meta">
+                      {ch.isIngested ? (
+                        <>
+                          <span className="status-dot" title="Contenido disponible" />
+                          <span>{ch.estimatedReadMin} min</span>
+                          <span>
+                            {ch.slug.startsWith('rep-')
+                              ? `· ${ch.pdfPages}`
+                              : `· págs. ${ch.pdfPages}`}
+                          </span>
+                        </>
+                      ) : (
+                        <span>Pendiente de volcar · págs. {ch.pdfPages}</span>
+                      )}
+                      {ch.isCompleted && <span>· ✓ Leído</span>}
+                    </span>
+                  </span>
+                </button>
+
+                {showSubToc && (
+                  <details className="chapter-subtoc" open={chapterTocExpanded}>
+                    <summary
+                      className="chapter-subtoc-summary"
+                      aria-expanded={chapterTocExpanded}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        updateChapterTocExpanded(!chapterTocExpanded);
+                      }}
+                    >
+                      <span className="chapter-subtoc-label">En este capítulo</span>
+                      <span className="chapter-subtoc-count">{tocHeadings.length}</span>
+                    </summary>
+                    <ul className="chapter-subtoc-list">
+                      {tocHeadings.map((heading) => (
+                        <li
+                          key={heading.anchor}
+                          className={heading.level === 3 ? 'is-sublevel' : undefined}
+                        >
+                          <button
+                            type="button"
+                            className="chapter-subtoc-link"
+                            onClick={() => handleJumpToSection(heading.anchor)}
+                          >
+                            {heading.text}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
             );
           })}
         </nav>
@@ -623,7 +731,11 @@ export const App: React.FC = () => {
                     <span>·</span>
                     <span>LECTURA {chapterDetail.estimatedReadMin} MIN</span>
                     <span>·</span>
-                    <span>PDF PÁGS. {chapterDetail.pdfPages}</span>
+                    <span>
+                      {chapterDetail.slug.startsWith('rep-')
+                        ? `REPORTE ${chapterDetail.pdfPages.toUpperCase()}`
+                        : `PDF PÁGS. ${chapterDetail.pdfPages}`}
+                    </span>
                   </div>
                   <h1>{chapterDetail.title}</h1>
                   <p className="chapter-subtitle">{chapterDetail.subtitle}</p>
@@ -706,36 +818,6 @@ export const App: React.FC = () => {
               </>
             )}
           </main>
-
-          {/* Right Table of Contents */}
-          <aside className="toc-aside" aria-label="Secciones de este capítulo">
-            <div className="toc-title">En este capítulo</div>
-            {tocHeadings.length > 0 ? (
-              <ul className="toc-list">
-                {tocHeadings.map((h) => (
-                  <li
-                    key={h.anchor}
-                    style={{ paddingLeft: h.level === 3 ? '0.65rem' : '0' }}
-                  >
-                    <button
-                      type="button"
-                      className="toc-link"
-                      onClick={() => {
-                        const el = document.getElementById(h.anchor);
-                        el?.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                    >
-                      {h.text}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Sin subsecciones indexadas.
-              </p>
-            )}
-          </aside>
         </div>
         )}
       </div>

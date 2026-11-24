@@ -1,5 +1,6 @@
 import type {
   BlockPayload,
+  BlockType,
   ChapterSummary,
   ExifMetadata,
   TextSegment,
@@ -7,16 +8,7 @@ import type {
 
 export interface SeedBlockInput {
   sectionAnchor?: string;
-  blockType:
-    | 'heading'
-    | 'paragraph'
-    | 'list'
-    | 'qa_item'
-    | 'image_card'
-    | 'image_pair'
-    | 'callout_tip'
-    | 'quote'
-    | 'sony_a7iv_note';
+  blockType: BlockType;
   payload: BlockPayload;
 }
 

@@ -24,13 +24,26 @@ function localSqliteApiPlugin(): Plugin {
       const chaptersDir = path.join(staticApiDir, 'chapters');
       fs.mkdirSync(chaptersDir, { recursive: true });
 
-      const modules = getAllModulesWithChapters(dbPath);
+      const isPrivateModule = (slug: string) => slug.startsWith('libro-4-');
+      const allModules = getAllModulesWithChapters(dbPath);
+      const publicModules = allModules.filter((mod) => !isPrivateModule(mod.slug));
+
+      // Remove stale private chapter JSON files if they ever existed
+      const allowedSlugs = new Set(
+        publicModules.flatMap((mod) => mod.chapters.map((ch) => `${ch.slug}.json`))
+      );
+      for (const existingFile of fs.readdirSync(chaptersDir)) {
+        if (!allowedSlugs.has(existingFile)) {
+          fs.unlinkSync(path.join(chaptersDir, existingFile));
+        }
+      }
+
       fs.writeFileSync(
         path.join(staticApiDir, 'modules.json'),
-        JSON.stringify({ modules })
+        JSON.stringify({ modules: publicModules })
       );
 
-      for (const mod of modules) {
+      for (const mod of publicModules) {
         for (const ch of mod.chapters) {
           const detail = getChapterBySlug(ch.slug, dbPath);
           if (detail) {
